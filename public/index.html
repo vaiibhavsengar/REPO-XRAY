@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repo X-Ray — See inside your codebase</title>
+  <meta name="description" content="Local-first AI codebase intelligence tool connecting to Ollama for architecture mapping, impact analysis, and code health scanning.">
+  <link rel="stylesheet" href="vendor/prism.css">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top Header Bar -->
+    <header class="top-header">
+      <div class="header-left">
+        <a href="#" class="brand-badge" id="btn-brand-home">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9" stroke-opacity="0.4" />
+            <path d="M12 3v18M3 12h18" stroke-dasharray="2 3" />
+            <polygon points="12,7 16,12 12,17 8,12" stroke="currentColor" fill="rgba(59, 130, 246, 0.2)" />
+          </svg>
+          <span>REPO X-RAY</span>
+        </a>
+
+        <div class="brand-divider"></div>
+
+        <div class="repo-status-pill" id="btn-open-repo-modal" title="Click to open or scan a repository">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="repo-name" id="top-repo-name">Stipo</span>
+          <span class="repo-branch-badge" id="top-repo-branch">main</span>
+          <span class="demo-indicator" id="top-repo-badge">Demo Repository</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="privacy-badge" title="Zero cloud telemetry. Code never leaves this machine.">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Local-First (No Cloud Data Leak)</span>
+        </div>
+
+        <div class="ai-status-pill" id="btn-open-ai-modal" title="Configure local Ollama connection">
+          <span class="status-dot offline" id="ai-status-dot"></span>
+          <span id="ai-status-text">LOCAL AI: Checking...</span>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" id="btn-quick-scan">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            <polyline points="21 5 12 14 9 11"></polyline>
+          </svg>
+          Scan Folder
+        </button>
+
+        <button class="btn btn-subtle btn-sm" id="btn-load-demo" title="Load sample repository">
+          Explore Demo
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Shell Body -->
+    <div class="app-body">
+      <!-- Left Sidebar Navigation -->
+      <aside class="app-sidebar">
+        <div class="sidebar-top">
+          <div class="nav-section-title">Analysis Views</div>
+          <nav class="sidebar-nav">
+            <a class="nav-item active" data-view="overview">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Overview</span>
+            </a>
+
+            <a class="nav-item" data-view="architecture">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              <span>Architecture</span>
+            </a>
+
+            <a class="nav-item" data-view="explorer">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                <polyline points="13 2 13 9 20 9"></polyline>
+              </svg>
+              <span>Explorer</span>
+            </a>
+
+            <a class="nav-item" data-view="ai-analysis">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span>AI Analysis</span>
+            </a>
+
+            <a class="nav-item" data-view="impact">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+              <span>Impact Analysis</span>
+            </a>
+
+            <a class="nav-item" data-view="health">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>Code Health</span>
+            </a>
+
+            <a class="nav-item" data-view="docs">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <span>Documentation</span>
+            </a>
+          </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="connection-card">
+            <div class="connection-card-header">
+              <span>LOCAL AI ENGINE</span>
+              <span class="status-dot offline" id="sidebar-ai-dot"></span>
+            </div>
+            <div class="connection-card-body" id="sidebar-ai-label">
+              Ollama Offline
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-sidebar-connect" style="margin-top: 4px;">
+              Connect Ollama
+            </button>
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+            Repo X-Ray v1.0.0 • Local-First
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Panels -->
+      <main class="main-content">
+        <!-- ==========================================
+             VIEW 1: OVERVIEW DASHBOARD
+             ========================================== -->
+        <section class="view-panel active" id="view-overview">
+          <div class="dashboard-container">
+            <div class="repo-hero">
+              <div class="hero-title-group">
+                <div class="hero-title-row">
+                  <h1 class="hero-title" id="overview-repo-title">Stipo</h1>
+                  <span class="demo-indicator" id="overview-badge">Demo Repository</span>
+                </div>
+                <p class="hero-subtitle" id="overview-repo-subtitle">
+                  Firebase-powered web application with telemetry dashboards, authentication lifecycle, and Firestore persistence.
+                </p>
+              </div>
+
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="btn-hero-explore-arch">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  </svg>
+                  Explore Architecture
+                </button>
+                <button class="btn btn-secondary" id="btn-hero-ask">
+                  Ask Codebase
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-label">Files</span>
+                <span class="stat-value" id="stat-files">87</span>
+                <span class="stat-subtext" id="stat-lines">12,480 LOC indexed</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Directories</span>
+                <span class="stat-value" id="stat-dirs">14</span>
+                <span class="stat-subtext">Organized by feature</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Dependencies</span>
+                <span class="stat-value" id="stat-deps">23</span>
+                <span class="stat-subtext">External packages</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Modules</span>
+                <span class="stat-value" id="stat-modules">31</span>
+                <span class="stat-subtext">Logical components</span>
+              </div>
+            </div>
+
+            <!-- Architecture Summary Flow Banner -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                  </svg>
+                  Architecture Summary
+                </span>
+                <span class="card-badge" id="overview-flow-tag">Pipeline Verified</span>
+              </div>
+              <div class="architecture-flow" id="overview-flow-container">
+                <span class="flow-node">Frontend (Vanilla UI)</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-node">Express API Gateway</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-node">Firebase Auth Broker</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-node">Firestore Cloud DB</span>
+              </div>
+            </div>
+
+            <!-- AI Insight Box -->
+            <div class="ai-insight-box">
+              <svg class="ai-insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <div class="ai-insight-text" id="overview-ai-insight">
+                Stipo implements a modular client-server pattern. The client layer coordinates lightweight UI components that interact with a centralized Firebase Authentication broker and Firestore data collections. The Express backend acts as an authenticated telemetry gateway with rate limiting and audit logging.
+              </div>
+            </div>
+
+            <!-- Two-Column Overview Section -->
+            <div class="overview-grid">
+              <!-- Left: Project Health Breakdown -->
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Project Health
+                  </span>
+                  <span class="card-badge" id="overview-overall-score">Overall 77/100</span>
+                </div>
+
+                <div class="health-bars-list">
+                  <div class="health-bar-row">
+                    <div class="health-bar-meta">
+                      <span class="health-bar-label">Architecture</span>
+                      <span class="health-bar-score" id="bar-arch-score">86</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill high" id="bar-arch-fill" style="width: 86%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="health-bar-row">
+                    <div class="health-bar-meta">
+                      <span class="health-bar-label">Maintainability</span>
+                      <span class="health-bar-score" id="bar-maint-score">78</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill medium" id="bar-maint-fill" style="width: 78%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="health-bar-row">
+                    <div class="health-bar-meta">
+                      <span class="health-bar-label">Documentation</span>
+                      <span class="health-bar-score" id="bar-docs-score">62</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill medium" id="bar-docs-fill" style="width: 62%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="health-bar-row">
+                    <div class="health-bar-meta">
+                      <span class="health-bar-label">Security Signals</span>
+                      <span class="health-bar-score" id="bar-sec-score">81</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill high" id="bar-sec-fill" style="width: 81%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                  <button class="btn btn-subtle btn-sm btn-block" id="btn-view-health-deepdive">
+                    View Full Health Audit →
+                  </button>
+                </div>
+              </div>
+
+              <!-- Right: Recently Analyzed Activity Stream -->
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Recently Analyzed
+                  </span>
+                  <span class="card-badge">Activity</span>
+                </div>
+
+                <div class="activity-list" id="overview-activity-list">
+                  <div class="activity-item">
+                    <div class="activity-info">
+                      <span class="activity-target">Stipo (Full Repository)</span>
+                    </div>
+                    <span class="activity-time">2 mins ago</span>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-info">
+                      <span class="activity-target">src/services/auth.js</span>
+                    </div>
+                    <span class="activity-time">14 mins ago</span>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-info">
+                      <span class="activity-target">Security Signals Audit</span>
+                    </div>
+                    <span class="activity-time">1 hour ago</span>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-info">
+                      <span class="activity-target">"Where is authentication handled?"</span>
+                    </div>
+                    <span class="activity-time">3 hours ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 2: ARCHITECTURE GRAPH (Cytoscape)
+             ========================================== -->
+        <section class="view-panel" id="view-architecture">
+          <div class="graph-view-wrapper">
+            <div class="graph-main-canvas">
+              <!-- Graph Toolbar -->
+              <div class="graph-toolbar">
+                <div class="toolbar-group">
+                  <div class="search-input-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="graph-search" placeholder="Search node or file...">
+                  </div>
+
+                  <select class="select-custom" id="graph-role-filter">
+                    <option value="all">All Roles</option>
+                    <option value="service">Services</option>
+                    <option value="component">Components</option>
+                    <option value="controller">Controllers</option>
+                    <option value="model">Models</option>
+                    <option value="util">Utils</option>
+                    <option value="config">Config</option>
+                  </select>
+
+                  <select class="select-custom" id="graph-layout-select">
+                    <option value="cose">Force-Directed (Cose)</option>
+                    <option value="breadthfirst">Hierarchical (Tree)</option>
+                    <option value="concentric">Concentric Rings</option>
+                    <option value="circle">Circular Layout</option>
+                  </select>
+                </div>
+
+                <div class="toolbar-group">
+                  <button class="btn btn-secondary btn-sm" id="btn-graph-fit" title="Fit to Screen">
+                    Fit View
+                  </button>
+                  <button class="btn btn-secondary btn-sm" id="btn-graph-reset" title="Reset View">
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              <!-- Cytoscape Container -->
+              <div id="cy"></div>
+
+              <!-- Graph Legend -->
+              <div class="graph-legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> Service</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> Component</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> Controller</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#8b5cf6;"></span> Model</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#0ea5e9;"></span> Utility</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#64748b;"></span> Config/Other</div>
+              </div>
+            </div>
+
+            <!-- Slide-over Inspector Panel -->
+            <aside class="node-inspector hidden" id="graph-node-inspector">
+              <div class="inspector-header">
+                <div>
+                  <h3 class="inspector-file-title" id="inspector-title">Select a Node</h3>
+                  <div class="inspector-file-path" id="inspector-path">-</div>
+                </div>
+                <button class="btn-icon" id="btn-close-inspector" title="Close Panel">✕</button>
+              </div>
+
+              <div class="inspector-body">
+                <div class="inspector-section">
+                  <span class="inspector-label">Role & Dimensions</span>
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <span class="chip" id="inspector-role">Service</span>
+                    <span style="font-size:12px; color:var(--text-secondary);" id="inspector-stats">142 lines • 4.8 KB</span>
+                  </div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspector-label">Dependencies (Imports)</span>
+                  <div class="chip-list" id="inspector-imports">
+                    <span class="chip">firebase.js</span>
+                    <span class="chip">helpers.js</span>
+                  </div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspector-label">Used By (Consumers)</span>
+                  <div class="chip-list" id="inspector-used-by">
+                    <span class="chip">Dashboard.js</span>
+                    <span class="chip">Header.js</span>
+                  </div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspector-label">Change Impact</span>
+                  <div id="inspector-impact-badge" class="impact-level-pill high" style="display:inline-block; font-size:12px; padding:3px 10px;">
+                    HIGH IMPACT
+                  </div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspector-label">AI Summary</span>
+                  <div style="font-size:12px; line-height:1.6; color:var(--text-secondary);" id="inspector-ai-summary">
+                    Coordinates authentication state and token refresh cycles with the Firebase Client SDK.
+                  </div>
+                </div>
+
+                <div class="inspector-actions">
+                  <button class="btn btn-primary btn-sm" id="btn-inspector-explain">
+                    Explain with AI
+                  </button>
+                  <button class="btn btn-secondary btn-sm" id="btn-inspector-impact">
+                    Analyze Impact
+                  </button>
+                  <button class="btn btn-subtle btn-sm" id="btn-inspector-preview">
+                    View in Explorer
+                  </button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 3: PROJECT EXPLORER
+             ========================================== -->
+        <section class="view-panel" id="view-explorer">
+          <div class="explorer-view-wrapper">
+            <!-- Left Tree Pane -->
+            <div class="explorer-tree-pane">
+              <div class="tree-pane-header">
+                <span>FILES</span>
+                <span id="explorer-file-count" style="font-size:10px; font-family:var(--font-mono);">87 files</span>
+              </div>
+              <div class="tree-content" id="explorer-tree">
+                <!-- Dynamically populated file tree -->
+              </div>
+            </div>
+
+            <!-- Right Code Pane -->
+            <div class="explorer-code-pane">
+              <div class="code-pane-header">
+                <div class="code-breadcrumb" id="code-breadcrumb">
+                  <span>src</span>
+                  <span>/</span>
+                  <span>services</span>
+                  <span>/</span>
+                  <span style="color:var(--text-primary); font-weight:600;">auth.js</span>
+                </div>
+                <div class="code-actions">
+                  <button class="btn btn-secondary btn-sm" id="btn-code-explain">
+                    Explain File
+                  </button>
+                  <button class="btn btn-subtle btn-sm" id="btn-code-impact">
+                    Analyze Impact
+                  </button>
+                </div>
+              </div>
+
+              <!-- Syntax Highlighted Code Viewer -->
+              <div class="code-editor-area">
+                <pre><code class="language-javascript" id="code-display">// Select a file from the explorer on the left</code></pre>
+              </div>
+
+              <!-- AI Code Explanation Drawer -->
+              <div class="code-ai-drawer" id="code-ai-drawer">
+                <div class="code-ai-header" id="code-ai-toggle">
+                  <span>AI Code Analysis</span>
+                  <span id="code-ai-arrow">▲</span>
+                </div>
+                <div class="code-ai-content" id="code-ai-content">
+                  Click <strong>"Explain File"</strong> to perform an AI-powered architectural inspection of the selected source file.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 4: AI CODEBASE CHAT ("Ask your codebase")
+             ========================================== -->
+        <section class="view-panel" id="view-ai-analysis">
+          <div class="chat-view-container">
+            <div class="chat-header-area">
+              <h2>Ask your codebase</h2>
+              <p>Query architecture, dependencies, data flows, and logic across your local repository using local AI.</p>
+
+              <!-- Suggested prompt chips -->
+              <div class="suggested-questions-row" id="suggested-prompts-row">
+                <span class="question-chip" data-q="Where is authentication handled?">Where is authentication handled?</span>
+                <span class="question-chip" data-q="How does the dashboard load data?">How does the dashboard load data?</span>
+                <span class="question-chip" data-q="What depends on firebase.js?">What depends on firebase.js?</span>
+                <span class="question-chip" data-q="Explain the application architecture.">Explain the application architecture.</span>
+                <span class="question-chip" data-q="What would break if I remove auth.js?">What would break if I remove auth.js?</span>
+              </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages-stream" id="chat-stream">
+              <!-- Initial welcome message -->
+              <div class="chat-bubble ai-msg">
+                <div class="chat-msg-header">
+                  <span>Repo X-Ray Intelligence</span>
+                  <span id="chat-engine-label">Local-First</span>
+                </div>
+                <div class="chat-msg-body">
+                  Welcome to <strong>Repo X-Ray</strong>. I have indexed your repository structure. Ask any architectural question, trace dependencies, or click one of the suggested prompts above.
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <div class="chat-input-bar">
+              <input type="text" class="chat-input-field" id="chat-input" placeholder="Ask anything about the codebase (e.g., Where are API requests dispatched?)..." autocomplete="off">
+              <button class="btn btn-primary btn-sm" id="btn-chat-send">
+                Ask
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 5: IMPACT ANALYSIS
+             ========================================== -->
+        <section class="view-panel" id="view-impact">
+          <div class="impact-view-container">
+            <div>
+              <h2 style="font-size:22px; font-weight:700;">Change Impact Analysis</h2>
+              <p style="font-size:13px; color:var(--text-secondary); margin-top:4px;">
+                Calculate the blast radius, affected functional areas, and risk factors before modifying or removing a file.
+              </p>
+            </div>
+
+            <!-- Target File Selector -->
+            <div class="impact-target-selector">
+              <span class="inspector-label" style="white-space:nowrap;">Select Target File:</span>
+              <select class="select-custom" id="impact-file-select" style="flex:1;">
+                <!-- Populated dynamically -->
+              </select>
+              <button class="btn btn-primary" id="btn-run-impact">
+                Analyze Impact
+              </button>
+            </div>
+
+            <!-- Impact Results Grid -->
+            <div class="impact-result-grid">
+              <!-- Left: Metrics & Affected Areas -->
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title">Blast Radius Assessment</span>
+                  <div id="impact-level-badge" class="impact-level-pill high">HIGH</div>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap:12px;">
+                  <div class="stat-card" style="padding:12px;">
+                    <span class="stat-label">Direct Dependents</span>
+                    <span class="stat-value" id="impact-direct-count" style="font-size:22px;">5</span>
+                  </div>
+                  <div class="stat-card" style="padding:12px;">
+                    <span class="stat-label">Total Affected Files</span>
+                    <span class="stat-value" id="impact-total-count" style="font-size:22px;">14</span>
+                  </div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspector-label">Affected Functional Areas</span>
+                  <div class="chip-list" id="impact-areas-list">
+                    <span class="chip">Authentication</span>
+                    <span class="chip">Dashboard</span>
+                    <span class="chip">User Profile</span>
+                    <span class="chip">Session Management</span>
+                  </div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspector-label">Direct Dependents (Who imports this)</span>
+                  <div class="chip-list" id="impact-dependents-list">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Subgraph Visualization -->
+              <div class="card">
+                <div class="card-header">
+                  <span class="card-title">Dependency Ripple Sub-Graph</span>
+                  <span class="card-badge" id="impact-subgraph-label">Cascade Graph</span>
+                </div>
+                <div id="impact-subgraph"></div>
+              </div>
+            </div>
+
+            <!-- Actionable Recommendations Card -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  Recommended Before Changing
+                </span>
+                <span class="card-badge">AI Change Advisory</span>
+              </div>
+              <div id="impact-recommendations-list" style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-secondary);">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 6: CODE HEALTH
+             ========================================== -->
+        <section class="view-panel" id="view-health">
+          <div class="health-view-container">
+            <div class="health-summary-banner">
+              <div>
+                <h2 style="font-size:22px; font-weight:700;">AI-assisted code health scan</h2>
+                <p style="font-size:13px; color:var(--text-secondary); margin-top:4px;">
+                  Heuristic codebase quality inspection. Not a certified penetration test or formal security audit.
+                </p>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:11px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Overall Score</span>
+                <div style="font-size:36px; font-weight:800; color:var(--color-success); font-family:var(--font-mono);" id="health-overall-score">77</div>
+              </div>
+            </div>
+
+            <!-- 4 Category Cards Grid -->
+            <div class="health-cards-grid">
+              <!-- Architecture -->
+              <div class="health-category-card">
+                <div class="card-header">
+                  <span class="card-title">Architecture & Coupling</span>
+                  <span class="card-badge" id="health-score-arch">86/100</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);" id="health-summary-arch">
+                  Clean structural boundaries with established service layer patterns and low cyclic coupling.
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;" id="health-signals-arch">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Maintainability -->
+              <div class="health-category-card">
+                <div class="card-header">
+                  <span class="card-title">Maintainability & Modularity</span>
+                  <span class="card-badge" id="health-score-maint">78/100</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);" id="health-summary-maint">
+                  Well-organized directory layout; slight modularity debt in primary dashboard and controller files.
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;" id="health-signals-maint">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Documentation -->
+              <div class="health-category-card">
+                <div class="card-header">
+                  <span class="card-title">Documentation Coverage</span>
+                  <span class="card-badge" id="health-score-docs">62/100</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);" id="health-summary-docs">
+                  Basic root README exists; internal service contracts and helper utilities need docstrings.
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;" id="health-signals-docs">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Security Signals -->
+              <div class="health-category-card">
+                <div class="card-header">
+                  <span class="card-title">Security Signals</span>
+                  <span class="card-badge" id="health-score-sec">81/100</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-secondary);" id="health-summary-sec">
+                  Good baseline security posture; ensure production secrets are strictly decoupled from client-side bundles.
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;" id="health-signals-sec">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Actionable Recommendations -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Priority Recommendations</span>
+                <span class="card-badge">Action Items</span>
+              </div>
+              <div id="health-priority-recs" style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--text-secondary);">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 7: DOCUMENTATION & README GENERATOR
+             ========================================== -->
+        <section class="view-panel" id="view-docs">
+          <div class="docs-view-container">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h2 style="font-size:22px; font-weight:700;">Documentation & Architecture Spec</h2>
+                <p style="font-size:13px; color:var(--text-secondary); margin-top:4px;">
+                  Generate comprehensive technical documentation and standardized README files from repository analysis.
+                </p>
+              </div>
+
+              <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" id="btn-docs-explain-project">
+                  Explain Project
+                </button>
+                <button class="btn btn-primary" id="btn-docs-generate-readme">
+                  Generate README
+                </button>
+                <button class="btn btn-secondary" id="btn-docs-copy-md">
+                  Copy Markdown
+                </button>
+              </div>
+            </div>
+
+            <!-- Sub Tab Navigation -->
+            <div class="docs-tab-nav">
+              <button class="btn btn-subtle btn-sm active" id="btn-subtab-deepdive">Architecture Deep-Dive</button>
+              <button class="btn btn-subtle btn-sm" id="btn-subtab-readme">README Draft</button>
+            </div>
+
+            <!-- Formatted Markdown Content Container -->
+            <div class="docs-markdown-preview" id="docs-preview-area">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ==========================================================================
+         Modals & Dialogs
+         ========================================================================== -->
+
+    <!-- Connect Local AI Modal -->
+    <div class="modal-backdrop" id="modal-ai-connection">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 class="modal-title">Connect Local AI</h3>
+          <button class="btn-icon" id="btn-close-ai-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px; color:var(--text-secondary);">
+            Repo X-Ray uses your local Ollama installation. Your source code stays on your machine.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Ollama URL</label>
+            <input type="text" class="form-input" id="input-ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Select Model</label>
+            <select class="select-custom" id="select-ollama-model" style="width:100%; padding:8px 12px;">
+              <option value="qwen2.5-coder">qwen2.5-coder (Recommended)</option>
+              <option value="llama3.2">llama3.2</option>
+              <option value="gemma3">gemma3</option>
+            </select>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); padding:10px 14px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+            <div style="display:flex; align-items:center; gap:8px; font-size:12px;">
+              <span class="status-dot offline" id="modal-ai-status-dot"></span>
+              <span id="modal-ai-status-text">Ollama unavailable</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-test-ollama">
+              Test Connection
+            </button>
+          </div>
+
+          <!-- Concise Setup Guidance -->
+          <div style="background:rgba(255, 255, 255, 0.02); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:12px 14px; font-size:12px; color:var(--text-secondary);">
+            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">If Ollama isn't running:</strong>
+            <ol style="margin-left:16px; line-height:1.6;">
+              <li>Install Ollama from <code>https://ollama.com</code></li>
+              <li>Start the background server: <code>ollama serve</code></li>
+              <li>Pull a coding model: <code>ollama pull qwen2.5-coder</code></li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-subtle" id="btn-cancel-ai-modal">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-ai-connection">Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan Local Repository Modal -->
+    <div class="modal-backdrop" id="modal-scan-repo">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 class="modal-title">Open Local Repository</h3>
+          <button class="btn-icon" id="btn-close-scan-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px; color:var(--text-secondary);">
+            Enter the local absolute or relative folder path of the repository you want to analyze.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Repository Directory Path</label>
+            <input type="text" class="form-input" id="input-repo-path" placeholder="c:\Users\ADMIN\Desktop\MyProject" value="c:\Users\ADMIN\Desktop\Repo X-Ray">
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-subtle btn-sm" id="btn-set-current-repo">
+              Use Current Workspace
+            </button>
+            <button class="btn btn-subtle btn-sm" id="btn-set-demo-repo">
+              Load Stipo (Demo)
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-subtle" id="btn-cancel-scan-modal">Cancel</button>
+          <button class="btn btn-primary" id="btn-start-scan">Start X-Ray Scan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- First-Run Onboarding Welcome Screen -->
+    <div class="welcome-hero-backdrop" id="welcome-screen">
+      <div class="welcome-card">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg class="brand-icon" style="width:28px; height:28px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9" stroke-opacity="0.4" />
+            <path d="M12 3v18M3 12h18" stroke-dasharray="2 3" />
+            <polygon points="12,7 16,12 12,17 8,12" stroke="currentColor" fill="rgba(59, 130, 246, 0.2)" />
+          </svg>
+          <span style="font-weight:700; letter-spacing:0.06em; font-size:14px;">REPO X-RAY</span>
+        </div>
+
+        <div>
+          <h1 style="font-size:28px; font-weight:700; letter-spacing:-0.02em; line-height:1.2;">
+            See inside your codebase.
+          </h1>
+          <p style="font-size:14px; color:var(--text-secondary); margin-top:8px; line-height:1.6;">
+            Understand architecture, dependencies, and code health with AI running on your own machine.
+          </p>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:8px;">
+          <button class="btn btn-primary" id="welcome-btn-connect-ai" style="padding:10px 20px; font-size:13px;">
+            Connect Local AI
+          </button>
+          <button class="btn btn-secondary" id="welcome-btn-explore-demo" style="padding:10px 20px; font-size:13px;">
+            Explore Demo
+          </button>
+        </div>
+
+        <div style="border-top:1px solid var(--border-subtle); padding-top:14px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Your source code is analyzed locally. Repo X-Ray does not require a cloud AI API.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scanning Progress Experience Overlay -->
+    <div class="scan-progress-overlay" id="scan-progress-overlay">
+      <div class="scan-card">
+        <svg class="brand-icon" style="width:36px; height:36px; animation:spin 4s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9" stroke-opacity="0.4" />
+          <path d="M12 3v18M3 12h18" stroke-dasharray="2 3" />
+          <polygon points="12,7 16,12 12,17 8,12" stroke="currentColor" fill="rgba(59, 130, 246, 0.4)" />
+        </svg>
+
+        <div>
+          <h3 style="font-size:16px; font-weight:700; letter-spacing:0.04em;">SCANNING REPOSITORY</h3>
+          <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;" id="scan-progress-subtext">Analyzing local workspace files...</p>
+        </div>
+
+        <div class="scan-steps-list">
+          <div class="scan-step-item active" id="step-reading">
+            <span class="step-indicator">●</span> Reading files...
+          </div>
+          <div class="scan-step-item" id="step-graph">
+            <span class="step-indicator">○</span> Building dependency graph...
+          </div>
+          <div class="scan-step-item" id="step-arch">
+            <span class="step-indicator">○</span> Analyzing architecture...
+          </div>
+          <div class="scan-step-item" id="step-ai">
+            <span class="step-indicator">○</span> Preparing AI context...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <!-- Vendor Scripts (Local offline bundles) -->
+  <script src="vendor/cytoscape.min.js"></script>
+  <script src="vendor/prism.js"></script>
+
+  <!-- Application Logic -->
+  <script src="scripts/app.js"></script>
+</body>
+</html>

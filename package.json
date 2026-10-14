@@ -1,0 +1,19 @@
+{
+  "name": "repo-x-ray",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cytoscape": "^3.34.3",
+    "express": "^5.3.0",
+    "prismjs": "^1.30.0"
+  }
+}
