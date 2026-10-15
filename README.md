@@ -184,3 +184,5 @@ If you do not have Ollama installed or running, **Repo X-Ray includes a full off
 ## License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+
+A simple project made by Vaibhav Sengar for lovely developers.
